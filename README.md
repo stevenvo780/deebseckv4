@@ -97,6 +97,8 @@ Ese throttle también es **configurable desde el modal de Ajustes** de la UI con
 - **RPM máximo**
 - **intervalo mínimo entre requests (s)**
 
+Y además puedes activar **modo de reintentos infinitos**, que elimina el tope normal de 30 iteraciones del agente y hace que siga reintentando fallos transitorios del proveedor en lugar de cerrar la conversación.
+
 La **carpeta de trabajo** del modal también se guarda desde la UI. Estos ajustes quedan persistidos por la aplicación en disco, sin tener que editar `.env`.
 
 La separación efectiva aplicada será siempre la mayor entre:

@@ -275,6 +275,14 @@ def resolve_retry_after_seconds(headers: httpx.Headers) -> float:
     return NIM_429_BACKOFF_SECONDS
 
 
+def is_retriable_status(status_code: int) -> bool:
+    return status_code in {408, 409, 425, 429, 500, 502, 503, 504}
+
+
+def transient_retry_delay(attempt: int) -> float:
+    return min(60.0, 3.0 + max(0, attempt - 1) * 2.0)
+
+
 def parse_runtime_config_value(value: Any, *, kind: str, minimum: float) -> float:
     try:
         parsed = float(value)
@@ -304,6 +312,7 @@ def default_runtime_settings() -> dict[str, Any]:
         "working_dir": normalize_working_dir_value(str(DEFAULT_WORKING_DIR)),
         "nvidia_max_rpm": int(NIM_MAX_RPM),
         "nvidia_min_request_interval_seconds": float(NIM_MIN_REQUEST_INTERVAL_SECONDS),
+        "infinite_retry_mode": False,
     }
 
 
@@ -329,6 +338,8 @@ def sanitize_runtime_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
             settings["nvidia_min_request_interval_seconds"] = min_interval
     except (TypeError, ValueError):
         pass
+
+    settings["infinite_retry_mode"] = bool(raw.get("infinite_retry_mode", settings["infinite_retry_mode"]))
 
     return settings
 
@@ -371,6 +382,7 @@ def current_runtime_settings() -> dict[str, Any]:
         "nvidia_rate_window_seconds": float(limiter["window_seconds"]),
         "nvidia_rate_safety_seconds": float(limiter["safety_seconds"]),
         "nvidia_429_backoff_seconds": float(NIM_429_BACKOFF_SECONDS),
+        "infinite_retry_mode": bool(stored.get("infinite_retry_mode", False)),
     }
 
 
@@ -926,6 +938,8 @@ async def stream_response(
 
     sanitized_messages = sanitize_chat_messages(messages)
     selected_temperature = choose_temperature(model, sanitized_messages, system_prompt)
+    runtime_settings = current_runtime_settings()
+    infinite_retry_mode = bool(runtime_settings.get("infinite_retry_mode", False))
     persistent_memory_text = render_context_memory(conversation_memory or build_context_memory(messages))
     recent_activity_text = build_recent_activity_summary(messages)
     relevant_outputs_text = build_relevant_tool_outputs(messages)
@@ -953,9 +967,12 @@ async def stream_response(
     current_messages = list(base_messages)
     max_iterations = 30
     tools_temporarily_disabled = False
+    iteration = 0
+    completed_normally = False
 
     async with httpx.AsyncClient(timeout=httpx.Timeout(600.0, connect=15.0)) as client:
-        for iteration in range(max_iterations):
+        while infinite_retry_mode or iteration < max_iterations:
+            iteration += 1
             effective_agent_mode = agent_mode and not tools_temporarily_disabled
             payload: dict = {
                 "model": model,
@@ -975,6 +992,19 @@ async def stream_response(
             tool_calls_map: dict[int, dict] = {}
             finish_reason = None
             retry_without_tools = False
+            transient_error_attempt = 0
+
+            if infinite_retry_mode and iteration > max_iterations and (iteration - 1) % 25 == 0:
+                yield sse({
+                    "type": "notice",
+                    "message": (
+                        f"Modo de reintentos infinitos activo: el agente sigue trabajando tras {iteration - 1} iteraciones "
+                        "sin aplicar el tope normal de 30 vueltas."
+                    ),
+                    "source": "infinite_retry_mode",
+                    "iteration": iteration - 1,
+                    "ts": utc_now(),
+                })
 
             while True:
                 acquire_info = await NVIDIA_RATE_LIMITER.acquire()
@@ -1024,6 +1054,23 @@ async def stream_response(
                                     "status": resp.status_code,
                                     "wait_seconds": round(cooldown, 2),
                                     "max_rpm": NIM_MAX_RPM,
+                                    "ts": utc_now(),
+                                })
+                                continue
+
+                            if infinite_retry_mode and is_retriable_status(resp.status_code):
+                                transient_error_attempt += 1
+                                cooldown = await NVIDIA_RATE_LIMITER.impose_cooldown(transient_retry_delay(transient_error_attempt))
+                                yield sse({
+                                    "type": "notice",
+                                    "message": (
+                                        f"El proveedor devolvió HTTP {resp.status_code}. "
+                                        f"Modo infinito activo: reintento #{transient_error_attempt} tras {format_duration(cooldown)}."
+                                    ),
+                                    "source": "transient_model_http_retry",
+                                    "status": resp.status_code,
+                                    "wait_seconds": round(cooldown, 2),
+                                    "retry_attempt": transient_error_attempt,
                                     "ts": utc_now(),
                                 })
                                 continue
@@ -1094,11 +1141,51 @@ async def stream_response(
                                 if fn.get("arguments"):
                                     entry["args_str"] += fn["arguments"]
 
+                            transient_error_attempt = 0
+
                 except httpx.ReadTimeout:
+                    if infinite_retry_mode:
+                        transient_error_attempt += 1
+                        cooldown = await NVIDIA_RATE_LIMITER.impose_cooldown(transient_retry_delay(transient_error_attempt))
+                        yield sse({
+                            "type": "notice",
+                            "message": (
+                                "Timeout esperando respuesta del modelo. "
+                                f"Modo infinito activo: reintento #{transient_error_attempt} tras {format_duration(cooldown)}."
+                            ),
+                            "source": "model_timeout_retry",
+                            "wait_seconds": round(cooldown, 2),
+                            "retry_attempt": transient_error_attempt,
+                            "ts": utc_now(),
+                        })
+                        continue
                     yield sse({
                         "type": "error",
                         "message": "Timeout esperando respuesta del modelo (>300s)",
                         "source": "model_timeout",
+                        "ts": utc_now(),
+                    })
+                    return
+                except httpx.HTTPError as exc:
+                    if infinite_retry_mode:
+                        transient_error_attempt += 1
+                        cooldown = await NVIDIA_RATE_LIMITER.impose_cooldown(transient_retry_delay(transient_error_attempt))
+                        yield sse({
+                            "type": "notice",
+                            "message": (
+                                f"Fallo transitorio de red/proveedor: {exc}. "
+                                f"Modo infinito activo: reintento #{transient_error_attempt} tras {format_duration(cooldown)}."
+                            ),
+                            "source": "model_transport_retry",
+                            "wait_seconds": round(cooldown, 2),
+                            "retry_attempt": transient_error_attempt,
+                            "ts": utc_now(),
+                        })
+                        continue
+                    yield sse({
+                        "type": "error",
+                        "message": str(exc),
+                        "source": "model_transport_exception",
                         "ts": utc_now(),
                     })
                     return
@@ -1118,6 +1205,7 @@ async def stream_response(
 
             # No tool calls → done
             if not tool_calls_map or not effective_agent_mode:
+                completed_normally = True
                 break
 
             # Build assistant message with tool_calls for the next round
@@ -1173,7 +1261,8 @@ async def stream_response(
                     "tool_call_id": tc["id"],
                     "content": result,
                 })
-        else:
+
+        if not completed_normally and not infinite_retry_mode:
             yield sse({
                 "type": "error",
                 "message": "Límite de iteraciones agente alcanzado (30)",
@@ -1229,6 +1318,7 @@ async def api_workdir():
         "nvidia_effective_min_interval_seconds": runtime_settings["nvidia_effective_min_interval_seconds"],
         "nvidia_rate_safety_seconds": runtime_settings["nvidia_rate_safety_seconds"],
         "nvidia_429_backoff_seconds": runtime_settings["nvidia_429_backoff_seconds"],
+        "infinite_retry_mode": runtime_settings["infinite_retry_mode"],
     }
 
 
@@ -1251,6 +1341,9 @@ async def api_settings(request: Request):
 
     if "working_dir" in body:
         runtime_settings["working_dir"] = normalize_working_dir_value(str(body.get("working_dir") or ""))
+
+    if "infinite_retry_mode" in body:
+        runtime_settings["infinite_retry_mode"] = bool(body.get("infinite_retry_mode"))
 
     runtime_settings["nvidia_max_rpm"] = max_rpm
     runtime_settings["nvidia_min_request_interval_seconds"] = min_interval
