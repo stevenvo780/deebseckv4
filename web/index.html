@@ -50,50 +50,49 @@
 
   .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 6px; }
 
-  select, textarea, input[type=range], input[type=number] {
+  select, textarea, input[type=number], input[type=text] {
     width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
     border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none;
     transition: border-color 0.15s;
   }
-  select:focus, textarea:focus { border-color: var(--accent); }
+  select:focus, textarea:focus, input[type=text]:focus { border-color: var(--accent); }
   select { cursor: pointer; }
   textarea { resize: vertical; min-height: 80px; font-family: inherit; line-height: 1.5; }
-
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
-  .toggle-label { font-size: 13px; display: flex; align-items: center; gap: 6px; }
-  .toggle-label .icon { font-size: 16px; }
-  .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute; inset: 0; background: var(--border); border-radius: 11px;
-    transition: 0.2s; cursor: pointer;
-  }
-  .toggle-slider::before {
-    content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px;
-    background: white; border-radius: 50%; transition: 0.2s;
-  }
-  input:checked + .toggle-slider { background: var(--accent); }
-  input:checked + .toggle-slider::before { transform: translateX(18px); }
-
-  .agent-badge {
-    display: none; background: linear-gradient(135deg, #6c8eff22, #a78bfa22);
-    border: 1px solid #6c8eff44; border-radius: 8px; padding: 8px 10px; font-size: 12px;
-    color: var(--text2); line-height: 1.5;
-  }
-  .agent-badge.visible { display: block; }
-
-  .range-row { display: flex; flex-direction: column; gap: 4px; }
-  .range-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
-  input[type=range] { padding: 4px 0; height: 20px; cursor: pointer; accent-color: var(--accent); }
   input[type=number] { padding: 6px 10px; font-size: 12px; }
+  input[type=text] { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 12px; }
 
   .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s, background 0.15s; }
   .btn:hover { opacity: 0.85; }
   .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
   .btn-ghost:hover { background: var(--surface2); opacity: 1; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #8aa6ff; opacity: 1; }
   .btn-danger { background: #991b1b22; border: 1px solid #991b1b44; color: var(--red); }
 
   .model-info { font-size: 11px; color: var(--text2); padding: 4px 2px; line-height: 1.6; }
+  .workdir-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .btn-mini { padding: 6px 8px; font-size: 11px; border-radius: 7px; }
+  .workdir-status { font-size: 11px; color: var(--text2); padding: 4px 2px 0; line-height: 1.5; word-break: break-all; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .history-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .history-header .section-label { margin-bottom: 0; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; padding-right: 2px; }
+  .history-item {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 8px 8px 10px; cursor: pointer;
+  }
+  .history-item:hover, .history-item.active { border-color: var(--accent); }
+  .history-title { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-meta { font-size: 10px; color: var(--text2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-delete {
+    width: 24px; height: 24px; border-radius: 6px; border: 1px solid transparent;
+    background: transparent; color: var(--text2); cursor: pointer;
+  }
+  .history-delete:hover { border-color: #991b1b55; color: var(--red); background: #991b1b22; }
+  .history-empty, .history-storage { font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .history-storage { padding: 5px 2px 0; word-break: break-all; }
 
   /* Main */
   .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -110,7 +109,36 @@
   .status-dot.streaming { animation: pulse 1s infinite; background: var(--yellow); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .topbar-right { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
-  .token-count { background: var(--surface2); padding: 3px 8px; border-radius: 12px; }
+  .topbar-btn { min-width: 106px; }
+
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.58); z-index: 50;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-backdrop.visible { display: flex; }
+  .modal {
+    width: min(560px, 100%); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); overflow: hidden;
+  }
+  .modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 18px 18px 14px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .modal-subtitle { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.6; }
+  .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+  .modal-actions {
+    display: flex; justify-content: flex-end; gap: 8px; padding: 0 18px 18px;
+  }
+  .setting-note {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 12px; color: var(--text2); line-height: 1.7;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+    background: #6c8eff22; border: 1px solid #6c8eff44; color: #bfdbfe;
+    padding: 3px 8px; font-size: 11px; font-weight: 700; margin-right: 8px;
+  }
 
   /* Messages */
   .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -154,6 +182,23 @@
   .bubble em { color: #cbd5e1; }
   .bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
 
+  .trace-summary {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+  }
+  .trace-section-title {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); margin: 2px 0 8px;
+  }
+  .process-log { display: flex; flex-direction: column; gap: 0; }
+  .trace-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  }
+  .trace-chip.error {
+    border-color: #991b1b55; background: #991b1b22; color: #fca5a5;
+  }
+
   /* Thinking block */
   .thinking-block {
     background: var(--thinking-bg); border: 1px solid var(--thinking-border);
@@ -184,9 +229,17 @@
   .tool-header:hover { background: #1a1f0fcc; }
   .tool-name { font-weight: 700; color: #a3e635; }
   .tool-icon { font-size: 15px; }
+  .tool-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .tool-action-btn {
+    background: #243213; color: #d9f99d; border: 1px solid #4d7c0f; border-radius: 7px;
+    font-size: 11px; padding: 4px 8px; cursor: pointer;
+  }
+  .tool-action-btn:hover { background: #2f4217; }
+  .tool-action-btn:disabled { opacity: 0.55; cursor: wait; }
   .tool-status { margin-left: auto; font-size: 11px; display: flex; align-items: center; gap: 4px; }
   .tool-status.running { color: var(--yellow); }
   .tool-status.done { color: var(--green); }
+  .tool-meta { font-size: 10px; color: var(--text2); margin-left: auto; }
 
   .tool-args {
     padding: 8px 12px; border-top: 1px solid var(--tool-border);
@@ -200,9 +253,56 @@
     background: var(--result-bg); border: 1px solid var(--result-border);
     border-radius: 8px; margin-bottom: 8px; font-size: 12.5px; overflow: hidden;
   }
+  .tool-result-block.error {
+    background: #2a1112; border-color: #991b1b55;
+  }
   .tool-result-header { padding: 6px 12px; background: #0f1a1488; font-size: 11px; color: #4ade80; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .tool-result-block.error .tool-result-header { background: #3a1315; color: #fca5a5; }
   .tool-result-content { padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #bbf7d0; white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto; display: none; border-top: 1px solid var(--result-border); }
   .tool-result-content.open { display: block; }
+  .tool-result-block.error .tool-result-content { color: #fecaca; border-top-color: #991b1b55; }
+
+  .error-log-block {
+    background: #991b1b22; border: 1px solid #991b1b55; border-radius: 8px;
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .error-log-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: #991b1b33; color: #fca5a5; font-size: 11px; font-weight: 700;
+  }
+  .error-log-content {
+    padding: 10px 12px; border-top: 1px solid #991b1b55; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: #fecaca; white-space: pre-wrap; word-break: break-word;
+  }
+  .error-log-source { font-size: 10px; color: #fda4af; margin-left: auto; }
+
+  .notice-log-block {
+    background: #7c2d1222; border: 1px solid #c2410c55; border-radius: 8px;
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .notice-log-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: #7c2d1233; color: #fdba74; font-size: 11px; font-weight: 700;
+  }
+  .notice-log-content {
+    padding: 10px 12px; border-top: 1px solid #c2410c55; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: #fed7aa; white-space: pre-wrap; word-break: break-word;
+  }
+  .notice-log-source { font-size: 10px; color: #fdba74; margin-left: auto; }
+
+  .notice-log-block {
+    background: #7c2d1222; border: 1px solid #c2410c55; border-radius: 8px;
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .notice-log-header {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: #7c2d1233; color: #fdba74; font-size: 11px; font-weight: 700;
+  }
+  .notice-log-content {
+    padding: 10px 12px; border-top: 1px solid #c2410c55; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: #fed7aa; white-space: pre-wrap; word-break: break-word;
+  }
+  .notice-log-source { font-size: 10px; color: #fdba74; margin-left: auto; }
 
   /* Input area */
   .input-area {
@@ -273,38 +373,10 @@
     </div>
     <div class="sidebar-body">
 
-      <!-- Model -->
-      <div>
-        <div class="section-label">Modelo</div>
-        <select id="model-select">
-          <option value="">Cargando modelos…</option>
-        </select>
-        <div class="model-info" id="model-info"></div>
-      </div>
-
-      <!-- Agent mode -->
-      <div>
-        <div class="section-label">Modo</div>
-        <label class="toggle-row" for="agent-toggle">
-          <span class="toggle-label"><span class="icon">🤖</span> Modo Agente</span>
-          <label class="toggle">
-            <input type="checkbox" id="agent-toggle">
-            <span class="toggle-slider"></span>
-          </label>
-        </label>
-        <div class="agent-badge" id="agent-badge">
-          🔧 Herramientas activas:<br>
-          • <b>run_terminal</b> — ejecuta comandos<br>
-          • <b>read_file</b> — lee archivos<br>
-          • <b>write_file</b> — escribe archivos<br>
-          • <b>list_directory</b> — lista directorios
-        </div>
-      </div>
-
       <!-- System prompt -->
       <div>
-        <div class="section-label">System Prompt</div>
-        <textarea id="system-prompt" rows="4" placeholder="Eres un asistente útil…">Eres un agente de IA autónomo con acceso completo a la terminal y sistema de archivos del PC del usuario.
+        <div class="section-label">Prompt del sistema</div>
+        <textarea id="system-prompt" rows="8" placeholder="Eres un asistente útil…">Eres un agente de IA autónomo con acceso completo a la terminal y sistema de archivos del PC del usuario.
 
 Principios fundamentales:
 - Completa las tareas de forma autónoma, sin pedir confirmaciones innecesarias
@@ -316,20 +388,25 @@ Principios fundamentales:
 - Sé directo y eficiente; no des explicaciones innecesarias sobre lo que vas a hacer, hazlo</textarea>
       </div>
 
-      <!-- Temperature -->
+      <!-- Model -->
       <div>
-        <div class="section-label">Parámetros</div>
-        <div class="range-row">
-          <div class="range-header"><span>Temperatura</span><span id="temp-val">0.3</span></div>
-          <input type="range" id="temperature" min="0" max="1.5" step="0.05" value="0.3">
-        </div>
+        <div class="section-label">Modelo</div>
+        <select id="model-select">
+          <option value="">Cargando modelos…</option>
+        </select>
+        <div class="model-info" id="model-info"></div>
       </div>
 
-      <div style="flex:1"></div>
-
-      <!-- Actions -->
-      <div style="display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <button class="btn btn-ghost" onclick="clearChat()">🗑️ Nueva conversación</button>
+      <!-- History -->
+      <div>
+        <div class="history-header">
+          <div class="section-label">Historial</div>
+          <button class="btn btn-ghost btn-mini" type="button" onclick="clearChat()">Nueva</button>
+        </div>
+        <div class="history-list" id="conversation-list">
+          <div class="history-empty">Cargando conversaciones…</div>
+        </div>
+        <div class="history-storage" id="history-storage"></div>
       </div>
     </div>
   </aside>
@@ -343,7 +420,7 @@ Principios fundamentales:
         <div class="model-badge" id="topbar-model">Selecciona un modelo</div>
       </div>
       <div class="topbar-right">
-        <span class="token-count" id="token-count">0 tokens</span>
+        <button class="btn btn-ghost btn-mini topbar-btn" type="button" onclick="openSettingsModal()">⚙️ Ajustes</button>
       </div>
     </div>
 
@@ -352,11 +429,11 @@ Principios fundamentales:
       <div class="welcome" id="welcome">
         <div class="welcome-logo">🧠</div>
         <h2>NIM Chat</h2>
-        <p>Chat con los mejores modelos de NVIDIA NIM. Activa el <b>Modo Agente</b> para que el modelo pueda ejecutar comandos en tu terminal.</p>
+        <p>Chat con los mejores modelos de NVIDIA NIM. El chat muestra el razonamiento emitido por el modelo, cada comando ejecutado y su salida directamente dentro de la conversación.</p>
         <div class="welcome-chips">
           <div class="chip" onclick="usePrompt('¿Qué modelos tienes disponibles y cuál recomiendas para código?')">💡 Modelos disponibles</div>
           <div class="chip" onclick="usePrompt('Escribe un script Python que genere números de Fibonacci')">🐍 Script Python</div>
-          <div class="chip" onclick="usePrompt('Lista los archivos de mi directorio home y dime cuánto espacio usan')">🖥️ Ver archivos (agente)</div>
+          <div class="chip" onclick="usePrompt('Lista los archivos de mi directorio home y dime cuánto espacio usan')">🖥️ Ver archivos</div>
           <div class="chip" onclick="usePrompt('Explícame cómo funciona el Mixture of Experts en DeepSeek V4')">📚 DeepSeek V4 MoE</div>
           <div class="chip" onclick="usePrompt('Haz una comparativa entre DeepSeek V4, Qwen3-Coder y Kimi K2')">⚖️ Comparar modelos</div>
         </div>
@@ -379,17 +456,80 @@ Principios fundamentales:
   </main>
 </div>
 
+<div class="modal-backdrop" id="settings-modal" onclick="closeSettingsModal(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="settings-title">Ajustes</div>
+        <div class="modal-subtitle">El modo agéntico es el único modo disponible. Aquí van los ajustes operativos del chat.</div>
+      </div>
+      <button class="btn btn-ghost btn-mini" type="button" onclick="closeSettingsModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="section-label">Modo</div>
+        <div class="setting-note"><span class="status-pill">Siempre activo</span>Se muestra el razonamiento emitido por el modelo, cada comando ejecutado y la salida asociada dentro del propio chat.</div>
+      </div>
+
+      <div>
+        <div class="section-label">Memoria contextual</div>
+        <div class="setting-note"><span class="status-pill">Auto</span>El agente reutiliza tres capas de contexto: memoria persistente de la conversación, resumen operativo reciente y fragmentos relevantes de salidas anteriores.</div>
+      </div>
+
+      <div>
+        <div class="section-label">Throttle NVIDIA</div>
+        <div class="settings-grid">
+          <div>
+            <div class="field-label">RPM máximo</div>
+            <input type="number" id="nvidia-max-rpm-input" min="1" max="120" step="1" placeholder="35">
+          </div>
+          <div>
+            <div class="field-label">Intervalo mínimo entre requests (s)</div>
+            <input type="number" id="nvidia-min-interval-input" min="0" max="60" step="0.1" placeholder="2.2">
+          </div>
+        </div>
+        <div class="workdir-status" id="nvidia-throttle-status"></div>
+      </div>
+
+      <div>
+        <div class="section-label">Carpeta de trabajo</div>
+        <input type="text" id="working-dir" placeholder="/ruta/del/proyecto">
+        <div class="workdir-actions">
+          <button class="btn btn-ghost btn-mini" type="button" onclick="setDefaultWorkdir()">Usar repo</button>
+          <button class="btn btn-ghost btn-mini" type="button" onclick="setHomeWorkdir()">Usar home</button>
+        </div>
+        <div class="workdir-status" id="workdir-status"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" onclick="closeSettingsModal()">Cerrar</button>
+      <button class="btn btn-primary" type="button" onclick="saveSettings()">Guardar ajustes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── State ───────────────────────────────────────────────────────────────────
 let messages = [];
 let streaming = false;
-let totalTokens = 0;
+let currentConversationId = null;
+let conversations = [];
+let historyStorageDir = '';
+let defaultWorkdir = '';
+let homeWorkdir = '';
+let nvidiaMaxRpm = 35;
+let nvidiaMinIntervalSeconds = 2.2;
+let nvidiaEffectiveMinIntervalSeconds = 2.2;
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 async function init() {
-  await loadModels();
+  await Promise.allSettled([loadModels(), loadWorkdir(), loadConversations()]);
   setupInput();
   setupSidebar();
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeSettingsModal();
+  });
+  updateAgentHint();
 }
 
 async function loadModels() {
@@ -402,6 +542,7 @@ async function loadModels() {
       sel.innerHTML = `<option value="">Error: ${data.error}</option>`;
       return;
     }
+
     const preferred = [
       'deepseek-ai/deepseek-v4-pro',
       'deepseek-ai/deepseek-v4-flash',
@@ -413,22 +554,28 @@ async function loadModels() {
       'qwen/qwen3-coder-480b-a35b-instruct',
       'openai/gpt-oss-120b',
     ];
+
     const optgroup1 = document.createElement('optgroup');
     optgroup1.label = '★ Recomendados';
     const optgroup2 = document.createElement('optgroup');
     optgroup2.label = 'Todos los modelos';
+
     for (const m of preferred) {
       if (data.models.includes(m)) {
         const opt = document.createElement('option');
-        opt.value = m; opt.textContent = m;
+        opt.value = m;
+        opt.textContent = m;
         optgroup1.appendChild(opt);
       }
     }
+
     for (const m of data.models) {
       const opt = document.createElement('option');
-      opt.value = m; opt.textContent = m;
+      opt.value = m;
+      opt.textContent = m;
       optgroup2.appendChild(opt);
     }
+
     sel.appendChild(optgroup1);
     sel.appendChild(optgroup2);
     sel.value = 'deepseek-ai/deepseek-v4-pro';
@@ -457,24 +604,290 @@ function updateModelInfo() {
   info.textContent = notes[model] || '';
 }
 
+async function loadConversations() {
+  try {
+    const res = await fetch('/api/conversations');
+    const data = await res.json();
+    conversations = data.conversations || [];
+    historyStorageDir = data.storage_dir || '';
+  } catch {
+    conversations = [];
+    historyStorageDir = '';
+  }
+  renderConversationList();
+}
+
+function renderConversationList() {
+  const list = document.getElementById('conversation-list');
+  if (!list) return;
+
+  const storage = document.getElementById('history-storage');
+  if (storage) storage.textContent = historyStorageDir ? `Disco: ${historyStorageDir}` : '';
+
+  if (!conversations.length) {
+    list.innerHTML = '<div class="history-empty">Sin conversaciones guardadas.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  for (const conv of conversations) {
+    const item = document.createElement('div');
+    item.className = 'history-item' + (conv.id === currentConversationId ? ' active' : '');
+    item.onclick = () => loadConversation(conv.id);
+    item.innerHTML = `
+      <div>
+        <div class="history-title">${escapeHtml(conv.title || 'Nueva conversacion')}</div>
+        <div class="history-meta">${escapeHtml(formatHistoryMeta(conv))}</div>
+      </div>
+      <button class="history-delete" title="Borrar" onclick="deleteConversation(event, '${escapeHtml(conv.id)}')">×</button>
+    `;
+    list.appendChild(item);
+  }
+}
+
+function formatHistoryMeta(conv) {
+  const count = conv.message_count || 0;
+  const date = conv.updated_at ? new Date(conv.updated_at).toLocaleString() : 'sin fecha';
+  return `${count} mensajes · ${date}`;
+}
+
+async function loadConversation(id) {
+  if (streaming) return;
+  try {
+    const res = await fetch(`/api/conversations/${encodeURIComponent(id)}`);
+    if (!res.ok) throw new Error(await res.text());
+    const conv = await res.json();
+
+    currentConversationId = conv.id;
+    messages = Array.isArray(conv.messages) ? conv.messages : [];
+
+    const modelSelect = document.getElementById('model-select');
+    if (conv.model && modelSelect) {
+      modelSelect.value = conv.model;
+      if (!modelSelect.value) {
+        const opt = document.createElement('option');
+        opt.value = conv.model;
+        opt.textContent = conv.model;
+        modelSelect.prepend(opt);
+        modelSelect.value = conv.model;
+      }
+      updateModelInfo();
+    }
+
+    if (conv.working_dir) document.getElementById('working-dir').value = conv.working_dir;
+
+    if (typeof conv.system_prompt === 'string') document.getElementById('system-prompt').value = conv.system_prompt;
+
+    updateWorkdirStatus();
+    updateAgentHint();
+    renderMessages();
+    renderConversationList();
+  } catch (e) {
+    alert('No se pudo cargar la conversación: ' + e.message);
+  }
+}
+
+async function deleteConversation(event, id) {
+  event.stopPropagation();
+  if (!confirm('¿Borrar esta conversación guardada en disco?')) return;
+
+  const res = await fetch(`/api/conversations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  if (!res.ok) {
+    alert('No se pudo borrar la conversación');
+    return;
+  }
+
+  if (currentConversationId === id) clearChat();
+  await loadConversations();
+}
+
+function currentConversationTitle() {
+  const firstUser = messages.find(message => message.role === 'user' && String(message.content || '').trim());
+  const raw = firstUser ? String(firstUser.content).trim() : 'Nueva conversacion';
+  return raw.replace(/\s+/g, ' ').slice(0, 80);
+}
+
+async function saveConversation() {
+  if (!messages.length) return;
+
+  const payload = {
+    id: currentConversationId,
+    title: currentConversationTitle(),
+    messages,
+    model: document.getElementById('model-select').value,
+    working_dir: selectedWorkdir(),
+    system_prompt: document.getElementById('system-prompt').value,
+  };
+
+  const res = await fetch('/api/conversations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  currentConversationId = data.conversation.id;
+  await loadConversations();
+}
+
 function setupSidebar() {
   document.getElementById('model-select').addEventListener('change', updateModelInfo);
-  document.getElementById('temperature').addEventListener('input', e => {
-    document.getElementById('temp-val').textContent = e.target.value;
+  document.getElementById('working-dir').addEventListener('input', event => {
+    localStorage.setItem('nimchat_working_dir', event.target.value.trim());
+    updateWorkdirStatus();
+    updateAgentHint();
   });
-  document.getElementById('agent-toggle').addEventListener('change', e => {
-    document.getElementById('agent-badge').classList.toggle('visible', e.target.checked);
-    document.getElementById('agent-hint').textContent = e.target.checked
-      ? '🤖 Modo agente activo — el modelo puede ejecutar comandos en tu PC'
-      : '';
+  document.getElementById('nvidia-max-rpm-input').addEventListener('input', updateThrottleStatus);
+  document.getElementById('nvidia-min-interval-input').addEventListener('input', updateThrottleStatus);
+}
+
+async function loadWorkdir() {
+  try {
+    const res = await fetch('/api/workdir');
+    const data = await res.json();
+    defaultWorkdir = data.default || '';
+    homeWorkdir = data.home || '';
+    nvidiaMaxRpm = Number.isFinite(Number(data.nvidia_max_rpm)) ? Number(data.nvidia_max_rpm) : 35;
+    nvidiaMinIntervalSeconds = Number.isFinite(Number(data.nvidia_min_request_interval_seconds)) ? Number(data.nvidia_min_request_interval_seconds) : 2.2;
+    nvidiaEffectiveMinIntervalSeconds = Number.isFinite(Number(data.nvidia_effective_min_interval_seconds))
+      ? Number(data.nvidia_effective_min_interval_seconds)
+      : Math.max(60 / Math.max(nvidiaMaxRpm, 1), nvidiaMinIntervalSeconds);
+  } catch {
+    defaultWorkdir = '';
+    homeWorkdir = '';
+    nvidiaMaxRpm = 35;
+    nvidiaMinIntervalSeconds = 2.2;
+    nvidiaEffectiveMinIntervalSeconds = 2.2;
+  }
+
+  const saved = localStorage.getItem('nimchat_working_dir');
+  document.getElementById('working-dir').value = saved || defaultWorkdir || '';
+  document.getElementById('nvidia-max-rpm-input').value = String(nvidiaMaxRpm);
+  document.getElementById('nvidia-min-interval-input').value = String(nvidiaMinIntervalSeconds);
+
+  const savedRpm = localStorage.getItem('nimchat_nvidia_max_rpm');
+  const savedMinInterval = localStorage.getItem('nimchat_nvidia_min_interval');
+  if (savedRpm !== null) document.getElementById('nvidia-max-rpm-input').value = savedRpm;
+  if (savedMinInterval !== null) document.getElementById('nvidia-min-interval-input').value = savedMinInterval;
+
+  if (savedRpm !== null || savedMinInterval !== null) {
+    try {
+      await persistSettings({ silent: true });
+    } catch {
+      // Mantener los valores cargados aunque el backend no esté disponible todavía.
+    }
+  }
+
+  updateWorkdirStatus();
+  updateThrottleStatus();
+  updateAgentHint();
+}
+
+function parsePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  return fallback;
+}
+
+function parseNonNegativeFloat(value, fallback) {
+  const parsed = Number.parseFloat(String(value ?? ''));
+  if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+  return fallback;
+}
+
+function derivedIntervalFromRpm(rpm) {
+  return 60 / Math.max(1, rpm);
+}
+
+function updateThrottleStatus() {
+  const rpm = parsePositiveInt(document.getElementById('nvidia-max-rpm-input').value, nvidiaMaxRpm || 35);
+  const userMinInterval = parseNonNegativeFloat(document.getElementById('nvidia-min-interval-input').value, nvidiaMinIntervalSeconds || 0);
+  const derived = derivedIntervalFromRpm(rpm);
+  const effective = Math.max(derived, userMinInterval);
+  document.getElementById('nvidia-throttle-status').textContent = `Se respetará un máximo de ${rpm} RPM. Separación efectiva entre requests: ~${effective.toFixed(2)}s (derivada por RPM: ${derived.toFixed(2)}s).`;
+}
+
+async function persistSettings({ silent = false } = {}) {
+  const rpm = parsePositiveInt(document.getElementById('nvidia-max-rpm-input').value, nvidiaMaxRpm || 35);
+  const minInterval = parseNonNegativeFloat(document.getElementById('nvidia-min-interval-input').value, nvidiaMinIntervalSeconds || 0);
+
+  const res = await fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nvidia_max_rpm: rpm,
+      nvidia_min_request_interval_seconds: minInterval,
+    }),
   });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+  const settings = data.settings || {};
+  nvidiaMaxRpm = Number.isFinite(Number(settings.nvidia_max_rpm)) ? Number(settings.nvidia_max_rpm) : rpm;
+  nvidiaMinIntervalSeconds = Number.isFinite(Number(settings.nvidia_min_request_interval_seconds))
+    ? Number(settings.nvidia_min_request_interval_seconds)
+    : minInterval;
+  nvidiaEffectiveMinIntervalSeconds = Number.isFinite(Number(settings.nvidia_effective_min_interval_seconds))
+    ? Number(settings.nvidia_effective_min_interval_seconds)
+    : Math.max(derivedIntervalFromRpm(nvidiaMaxRpm), nvidiaMinIntervalSeconds);
+
+  document.getElementById('nvidia-max-rpm-input').value = String(nvidiaMaxRpm);
+  document.getElementById('nvidia-min-interval-input').value = String(nvidiaMinIntervalSeconds);
+  localStorage.setItem('nimchat_nvidia_max_rpm', String(nvidiaMaxRpm));
+  localStorage.setItem('nimchat_nvidia_min_interval', String(nvidiaMinIntervalSeconds));
+  updateThrottleStatus();
+  updateAgentHint();
+
+  if (!silent) {
+    document.getElementById('stream-status').textContent = `Ajustes guardados · NVIDIA ≤ ${nvidiaMaxRpm} RPM · gap ~${nvidiaEffectiveMinIntervalSeconds.toFixed(2)}s`;
+  }
+
+  return settings;
+}
+
+async function saveSettings() {
+  try {
+    await persistSettings();
+    closeSettingsModal();
+  } catch (error) {
+    alert('No se pudieron guardar los ajustes: ' + error.message);
+  }
+}
+
+function selectedWorkdir() {
+  return document.getElementById('working-dir').value.trim() || defaultWorkdir || '';
+}
+
+function setDefaultWorkdir() {
+  document.getElementById('working-dir').value = defaultWorkdir;
+  localStorage.setItem('nimchat_working_dir', defaultWorkdir);
+  updateWorkdirStatus();
+  updateAgentHint();
+}
+
+function setHomeWorkdir() {
+  document.getElementById('working-dir').value = homeWorkdir;
+  localStorage.setItem('nimchat_working_dir', homeWorkdir);
+  updateWorkdirStatus();
+  updateAgentHint();
+}
+
+function updateWorkdirStatus() {
+  const dir = selectedWorkdir();
+  document.getElementById('workdir-status').textContent = dir ? `Activa: ${dir}` : 'Sin carpeta configurada';
+}
+
+function updateAgentHint() {
+  document.getElementById('agent-hint').textContent = `Modo agéntico + memoria contextual · NVIDIA ≤ ${nvidiaMaxRpm} RPM · gap ~${nvidiaEffectiveMinIntervalSeconds.toFixed(2)}s · cwd: ${selectedWorkdir()}`;
 }
 
 function setupInput() {
   const inp = document.getElementById('user-input');
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  inp.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       sendMessage();
     }
   });
@@ -491,59 +904,105 @@ function usePrompt(text) {
   document.getElementById('user-input').focus();
 }
 
+function emptyTrace() {
+  return { thinking: '', events: [] };
+}
+
+function normalizeTrace(trace) {
+  const normalized = emptyTrace();
+  normalized.thinking = typeof trace?.thinking === 'string' ? trace.thinking : '';
+  normalized.events = Array.isArray(trace?.events)
+    ? trace.events.filter(event => event && typeof event === 'object').map(event => ({ ...event }))
+    : [];
+  return normalized;
+}
+
+function shouldPersistAssistantMessage(content, trace) {
+  const normalized = normalizeTrace(trace);
+  return Boolean(String(content || '').trim() || normalized.thinking.trim() || normalized.events.length);
+}
+
+function sanitizeAssistantText(text) {
+  return String(text || '')
+    .replace(/\s*<[|｜]DSML[|｜][^\n\r]*/gu, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 async function sendMessage() {
   if (streaming) return;
+
   const inp = document.getElementById('user-input');
   const text = inp.value.trim();
   if (!text) return;
+
   inp.value = '';
   inp.style.height = 'auto';
 
   const model = document.getElementById('model-select').value;
-  if (!model) { alert('Selecciona un modelo primero'); return; }
+  if (!model) {
+    alert('Selecciona un modelo primero');
+    return;
+  }
 
   hideWelcome();
   appendUserMessage(text);
   messages.push({ role: 'user', content: text });
 
-  const agentMode = document.getElementById('agent-toggle').checked;
   const systemPrompt = document.getElementById('system-prompt').value;
-  const temperature = parseFloat(document.getElementById('temperature').value);
+  const workingDir = selectedWorkdir();
 
-  await streamAssistant({ model, agentMode, systemPrompt, temperature });
+  try {
+    await saveConversation();
+  } catch (e) {
+    document.getElementById('stream-status').textContent = 'No se pudo guardar historial';
+  }
+
+  await streamAssistant({
+    model,
+    systemPrompt,
+    workingDir,
+    conversationId: currentConversationId,
+    fullMessages: messages,
+  });
 }
 
-async function streamAssistant({ model, agentMode, systemPrompt, temperature }) {
+async function streamAssistant({ model, systemPrompt, workingDir, conversationId, fullMessages }) {
   streaming = true;
   setStatus('streaming');
   document.getElementById('send-btn').disabled = true;
 
   const msgEl = appendAssistantMessage();
   const bubble = msgEl.querySelector('.bubble');
-
-  let thinkingContent = '';
+  const sections = createAssistantTraceScaffold(bubble);
+  const assistantTrace = emptyTrace();
   let textContent = '';
-  let thinkingEl = null;
-  let thinkingContentEl = null;
-  let hasThinking = false;
 
-  // Placeholders
-  const thinkingPlaceholder = document.createElement('div');
-  const textEl = document.createElement('div');
-  bubble.appendChild(thinkingPlaceholder);
-  bubble.appendChild(textEl);
-
-  // Spinner while waiting
   const spinnerEl = document.createElement('span');
   spinnerEl.className = 'spinner';
-  textEl.appendChild(spinnerEl);
+  sections.answer.appendChild(spinnerEl);
+
+  const syncTraceUi = () => {
+    renderThinkingSection(sections.thinking, assistantTrace.thinking);
+    updateTraceSummary(sections.summary, assistantTrace, sanitizeAssistantText(textContent));
+  };
 
   try {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model, agent_mode: agentMode, system_prompt: systemPrompt, temperature }),
+      body: JSON.stringify({
+        messages: Array.isArray(fullMessages) ? fullMessages : [],
+        model,
+        system_prompt: systemPrompt,
+        working_dir: workingDir,
+        conversation_id: conversationId,
+      }),
     });
+
+    if (!resp.body) {
+      throw new Error('La respuesta del servidor no soporta streaming');
+    }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -552,89 +1011,131 @@ async function streamAssistant({ model, agentMode, systemPrompt, temperature }) 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop();
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
+
         let evt;
-        try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+        try {
+          evt = JSON.parse(line.slice(6));
+        } catch {
+          continue;
+        }
 
         if (evt.type === 'thinking') {
           spinnerEl.remove();
-          if (!hasThinking) {
-            hasThinking = true;
-            thinkingEl = createThinkingBlock();
-            thinkingContentEl = thinkingEl.querySelector('.thinking-content');
-            thinkingPlaceholder.appendChild(thinkingEl);
-          }
-          thinkingContent += evt.content;
-          thinkingContentEl.textContent = thinkingContent;
-          thinkingContentEl.scrollTop = thinkingContentEl.scrollHeight;
+          assistantTrace.thinking += evt.content || '';
+          syncTraceUi();
+          scrollToBottom();
+          continue;
         }
 
-        else if (evt.type === 'text') {
+        if (evt.type === 'text') {
           spinnerEl.remove();
-          textContent += evt.content;
-          textEl.innerHTML = renderMarkdown(textContent);
+          textContent += evt.content || '';
+          sections.answer.innerHTML = renderMarkdown(sanitizeAssistantText(textContent));
           hljs.highlightAll();
+          syncTraceUi();
           scrollToBottom();
+          continue;
         }
 
-        else if (evt.type === 'tool_call') {
+        if (evt.type === 'tool_call' || evt.type === 'tool_result' || evt.type === 'error' || evt.type === 'notice') {
           spinnerEl.remove();
-          const block = createToolCallBlock(evt);
-          bubble.appendChild(block);
+          assistantTrace.events.push(evt);
+          renderTraceEvent(sections.process, evt);
+          syncTraceUi();
           scrollToBottom();
+          continue;
         }
 
-        else if (evt.type === 'tool_result') {
-          const block = bubble.querySelector(`[data-call-id="${evt.call_id}"]`);
-          if (block) {
-            block.querySelector('.tool-status').innerHTML = '<span style="color:var(--green)">✓ done</span>';
-            const resultBlock = createToolResultBlock(evt);
-            block.after(resultBlock);
-          }
-          scrollToBottom();
-        }
-
-        else if (evt.type === 'error') {
+        if (evt.type === 'done') {
           spinnerEl.remove();
-          const errEl = document.createElement('div');
-          errEl.className = 'error-bubble';
-          errEl.textContent = '⚠ ' + evt.message;
-          bubble.appendChild(errEl);
-          scrollToBottom();
-        }
-
-        else if (evt.type === 'done') {
-          spinnerEl.remove();
-          if (textContent) {
-            messages.push({ role: 'assistant', content: textContent });
-          }
           document.getElementById('stream-status').textContent = '';
         }
       }
     }
   } catch (e) {
     spinnerEl.remove();
-    const errEl = document.createElement('div');
-    errEl.className = 'error-bubble';
-    errEl.textContent = '⚠ Error de conexión: ' + e.message;
-    bubble.appendChild(errEl);
+    const evt = {
+      type: 'error',
+      source: 'frontend',
+      ts: new Date().toISOString(),
+      message: 'Error de conexión: ' + e.message,
+    };
+    assistantTrace.events.push(evt);
+    renderTraceEvent(sections.process, evt);
+    syncTraceUi();
+  }
+
+  const finalAssistantText = sanitizeAssistantText(textContent);
+  if (shouldPersistAssistantMessage(finalAssistantText, assistantTrace)) {
+    messages.push({
+      role: 'assistant',
+      content: finalAssistantText,
+      trace: normalizeTrace(assistantTrace),
+    });
   }
 
   streaming = false;
   setStatus('idle');
   document.getElementById('send-btn').disabled = false;
+
+  try {
+    await saveConversation();
+  } catch (e) {
+    document.getElementById('stream-status').textContent = 'No se pudo guardar historial';
+  }
+
   scrollToBottom();
 }
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
 function hideWelcome() {
-  const w = document.getElementById('welcome');
-  if (w) w.remove();
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+}
+
+function welcomeHtml() {
+  return `
+    <div class="welcome" id="welcome">
+      <div class="welcome-logo">🧠</div>
+      <h2>NIM Chat</h2>
+      <p>Chat con los mejores modelos de NVIDIA NIM. El chat muestra el razonamiento emitido por el modelo, cada comando ejecutado y su salida directamente dentro de la conversación.</p>
+      <div class="welcome-chips">
+        <div class="chip" onclick="usePrompt('¿Qué modelos tienes disponibles y cuál recomiendas para código?')">💡 Modelos disponibles</div>
+        <div class="chip" onclick="usePrompt('Escribe un script Python que genere números de Fibonacci')">🐍 Script Python</div>
+        <div class="chip" onclick="usePrompt('Lista los archivos de mi directorio home y dime cuánto espacio usan')">🖥️ Ver archivos</div>
+        <div class="chip" onclick="usePrompt('Explícame cómo funciona el Mixture of Experts en DeepSeek V4')">📚 DeepSeek V4 MoE</div>
+        <div class="chip" onclick="usePrompt('Haz una comparativa entre DeepSeek V4, Qwen3-Coder y Kimi K2')">⚖️ Comparar modelos</div>
+      </div>
+    </div>
+  `;
+}
+
+function showWelcome() {
+  document.getElementById('messages').innerHTML = welcomeHtml();
+}
+
+function renderMessages() {
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
+
+  if (!messages.length) {
+    showWelcome();
+    return;
+  }
+
+  for (const message of messages) {
+    if (message.role === 'user') appendUserMessage(message.content || '');
+    if (message.role === 'assistant') appendSavedAssistantMessage(message);
+  }
+
+  scrollToBottom();
 }
 
 function appendUserMessage(text) {
@@ -652,10 +1153,144 @@ function appendUserMessage(text) {
 function appendAssistantMessage() {
   const el = document.createElement('div');
   el.className = 'msg assistant';
-  el.innerHTML = `<div class="avatar">⚡</div><div class="bubble"></div>`;
+  el.innerHTML = '<div class="avatar">⚡</div><div class="bubble"></div>';
   document.getElementById('messages').appendChild(el);
   scrollToBottom();
   return el;
+}
+
+function appendSavedAssistantMessage(message) {
+  const el = appendAssistantMessage();
+  renderAssistantBubble(el.querySelector('.bubble'), message.content || '', normalizeTrace(message.trace));
+  return el;
+}
+
+function createAssistantTraceScaffold(bubble) {
+  bubble.innerHTML = '';
+  const summary = document.createElement('div');
+  summary.className = 'trace-summary';
+  const thinking = document.createElement('div');
+  const process = document.createElement('div');
+  process.className = 'process-log';
+  const answer = document.createElement('div');
+  bubble.appendChild(summary);
+  bubble.appendChild(thinking);
+  bubble.appendChild(process);
+  bubble.appendChild(answer);
+  return { summary, thinking, process, answer };
+}
+
+function renderAssistantBubble(bubble, text, trace) {
+  const sections = createAssistantTraceScaffold(bubble);
+  renderThinkingSection(sections.thinking, trace.thinking || '');
+  for (const event of trace.events || []) {
+    renderTraceEvent(sections.process, event);
+  }
+  if (text) {
+    sections.answer.innerHTML = renderMarkdown(text);
+    hljs.highlightAll();
+  }
+  updateTraceSummary(sections.summary, trace, text);
+}
+
+function updateTraceSummary(container, trace, answerText = '') {
+  const normalized = normalizeTrace(trace);
+  const chips = [];
+
+  if (normalized.thinking.trim()) {
+    chips.push({ icon: '🧠', label: 'Razonamiento emitido' });
+  }
+
+  const toolCount = normalized.events.filter(event => event.type === 'tool_call').length;
+  if (toolCount) {
+    chips.push({ icon: '🔧', label: `${toolCount} herramienta${toolCount === 1 ? '' : 's'}` });
+  }
+
+  const errorCount = normalized.events.filter(event => event.type === 'error' || event.has_error || event.is_error).length;
+  if (errorCount) {
+    chips.push({ icon: '⚠', label: `${errorCount} error${errorCount === 1 ? '' : 'es'}`, tone: 'error' });
+  }
+
+  if (String(answerText || '').trim()) {
+    chips.push({ icon: '💬', label: 'Respuesta final' });
+  }
+
+  container.innerHTML = chips.map(chip => `
+    <span class="trace-chip${chip.tone === 'error' ? ' error' : ''}">
+      <span>${chip.icon}</span>
+      <span>${escapeHtml(chip.label)}</span>
+    </span>
+  `).join('');
+}
+
+function renderThinkingSection(container, text) {
+  container.innerHTML = '';
+  if (!String(text || '').trim()) return;
+  container.appendChild(createTraceSectionTitle('🧠', 'Proceso de pensamiento'));
+  const block = createThinkingBlock();
+  block.querySelector('.thinking-content').textContent = text;
+  container.appendChild(block);
+}
+
+function createTraceSectionTitle(icon, text) {
+  const title = document.createElement('div');
+  title.className = 'trace-section-title';
+  title.innerHTML = `<span>${icon}</span><span>${escapeHtml(text)}</span>`;
+  return title;
+}
+
+function ensureProcessSectionTitle(container) {
+  if (container.querySelector('.trace-section-title')) return;
+  container.appendChild(createTraceSectionTitle('⚙️', 'Comandos y herramientas ejecutadas'));
+}
+
+function formatTraceTimestamp(ts) {
+  if (!ts) return '';
+  const date = new Date(ts);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString();
+}
+
+function findToolCallBlock(container, callId) {
+  return Array.from(container.querySelectorAll('.tool-block')).find(block => block.getAttribute('data-call-id') === callId) || null;
+}
+
+function renderTraceEvent(container, evt) {
+  if (!evt || typeof evt !== 'object') return;
+
+  ensureProcessSectionTitle(container);
+
+  if (evt.type === 'tool_call') {
+    container.appendChild(createToolCallBlock(evt));
+    return;
+  }
+
+  if (evt.type === 'tool_result') {
+    const callBlock = findToolCallBlock(container, evt.call_id);
+    if (callBlock) {
+      const status = callBlock.querySelector('.tool-status');
+      if (status) {
+        status.className = 'tool-status done';
+        status.textContent = `✓ done${formatTraceTimestamp(evt.ts) ? ` · ${formatTraceTimestamp(evt.ts)}` : ''}`;
+      }
+    }
+    const resultBlock = createToolResultBlock(evt);
+    if (callBlock) {
+      callBlock.after(resultBlock);
+    } else {
+      container.appendChild(resultBlock);
+    }
+    return;
+  }
+
+  if (evt.type === 'error') {
+    container.appendChild(createErrorLogBlock(evt));
+    return;
+  }
+
+  if (evt.type === 'notice') {
+    container.appendChild(createNoticeLogBlock(evt));
+    return;
+  }
 }
 
 function createThinkingBlock() {
@@ -664,7 +1299,7 @@ function createThinkingBlock() {
   block.innerHTML = `
     <div class="thinking-header" onclick="toggleThinking(this)">
       <span>🧠</span>
-      <span>Pensamiento interno</span>
+      <span>Razonamiento emitido por el modelo</span>
       <span class="thinking-arrow open">▶</span>
     </div>
     <div class="thinking-content open"></div>
@@ -682,37 +1317,170 @@ function toggleThinking(header) {
 function createToolCallBlock(evt) {
   const block = document.createElement('div');
   block.className = 'tool-block';
-  block.setAttribute('data-call-id', evt.call_id);
+  block.setAttribute('data-call-id', evt.call_id || '');
+  block.dataset.toolName = evt.name || '';
+  block.dataset.toolArgs = JSON.stringify(evt.args || {});
 
   let argsHtml = '';
   if (evt.name === 'run_terminal') {
-    argsHtml = `<div class="tool-args"><div class="cmd-label">$ comando</div><pre>${escapeHtml(evt.args.command || '')}</pre></div>`;
+    const cwdHtml = evt.cwd
+      ? `<div class="cmd-label">cwd</div><pre>${escapeHtml(evt.cwd)}</pre>`
+      : '';
+    argsHtml = `<div class="tool-args"><div class="cmd-label">$ comando</div><pre>${escapeHtml(evt.command || evt.args?.command || '')}</pre>${cwdHtml}</div>`;
+  } else if (evt.path) {
+    argsHtml = `<div class="tool-args"><div class="cmd-label">ruta</div><pre>${escapeHtml(evt.path)}</pre></div>`;
   } else {
-    argsHtml = `<div class="tool-args"><pre>${escapeHtml(JSON.stringify(evt.args, null, 2))}</pre></div>`;
+    argsHtml = `<div class="tool-args"><pre>${escapeHtml(JSON.stringify(evt.args || {}, null, 2))}</pre></div>`;
   }
 
+  const stamp = formatTraceTimestamp(evt.ts);
   const icons = { run_terminal: '💻', read_file: '📄', write_file: '✍️', list_directory: '📁' };
   block.innerHTML = `
     <div class="tool-header">
       <span class="tool-icon">${icons[evt.name] || '🔧'}</span>
-      <span class="tool-name">${escapeHtml(evt.name)}</span>
-      <span class="tool-status running"><span class="spinner"></span> ejecutando…</span>
+      <span class="tool-name">${escapeHtml(evt.name || 'tool')}</span>
+      <div class="tool-actions">
+        <span class="tool-meta">${escapeHtml(stamp)}</span>
+        <button class="tool-action-btn" type="button" onclick="executeStoredTool(event, this.closest('.tool-block'))">▶ Ejecutar</button>
+        <span class="tool-status running"><span class="spinner"></span> ejecutando…</span>
+      </div>
     </div>
     ${argsHtml}
   `;
   return block;
 }
 
+function insertToolResultAfter(callBlock, resultBlock) {
+  let insertionPoint = callBlock;
+  while (insertionPoint.nextElementSibling && insertionPoint.nextElementSibling.matches('.tool-result-block, .error-log-block')) {
+    insertionPoint = insertionPoint.nextElementSibling;
+  }
+  insertionPoint.after(resultBlock);
+}
+
+async function executeStoredTool(event, block) {
+  event.stopPropagation();
+  if (!block) return;
+
+  const button = event.currentTarget;
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Ejecutando…';
+
+  const name = block.dataset.toolName || '';
+  let args = {};
+  try {
+    args = JSON.parse(block.dataset.toolArgs || '{}');
+  } catch {
+    args = {};
+  }
+
+  try {
+    const res = await fetch('/api/tools/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        call_id: block.getAttribute('data-call-id') || undefined,
+        name,
+        args,
+        working_dir: selectedWorkdir(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+    const resultBlock = createToolResultBlock(data.event || {});
+    insertToolResultAfter(block, resultBlock);
+    scrollToBottom();
+  } catch (error) {
+    const resultBlock = createToolResultBlock({
+      name,
+      output: `[error ejecutando manualmente: ${error.message}]`,
+      ts: new Date().toISOString(),
+      has_error: true,
+      is_error: true,
+    });
+    insertToolResultAfter(block, resultBlock);
+    scrollToBottom();
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+}
+
 function createToolResultBlock(evt) {
   const block = document.createElement('div');
-  block.className = 'tool-result-block';
-  const preview = (evt.output || '').slice(0, 80).replace(/\n/g, ' ');
+  const hasError = !!(evt.has_error || evt.is_error);
+  block.className = 'tool-result-block' + (hasError ? ' error' : '');
+
+  const output = evt.output || '(sin salida)';
+  const preview = output.slice(0, 80).replace(/\n/g, ' ');
+  const stamp = formatTraceTimestamp(evt.ts);
+  const label = hasError ? 'Registro de error en' : 'Resultado de';
+  const exitDetails = evt.timed_out
+    ? 'timeout'
+    : Number.isInteger(evt.exit_code)
+      ? `exit ${evt.exit_code}`
+      : '';
+  const metaLabel = [stamp, exitDetails].filter(Boolean).join(' · ');
+
   block.innerHTML = `
     <div class="tool-result-header" onclick="this.nextElementSibling.classList.toggle('open')">
-      <span>📤</span> Resultado de ${escapeHtml(evt.name)}
-      <span style="color:var(--text2);margin-left:auto;font-size:10px">${escapeHtml(preview)}…</span>
+      <span>${hasError ? '⚠' : '📤'}</span>
+      <span>${label} ${escapeHtml(evt.name || 'tool')}</span>
+      <span class="tool-meta">${escapeHtml(metaLabel)}</span>
+      <span style="color:var(--text2);margin-left:8px;font-size:10px">${escapeHtml(preview)}${preview.length >= 80 ? '…' : ''}</span>
     </div>
-    <div class="tool-result-content open"><pre>${escapeHtml(evt.output || '(sin salida)')}</pre></div>
+    <div class="tool-result-content open"><pre>${escapeHtml(output)}</pre></div>
+  `;
+  return block;
+}
+
+function createErrorLogBlock(evt) {
+  const block = document.createElement('div');
+  block.className = 'error-log-block';
+  const meta = [evt.source, evt.status ? `HTTP ${evt.status}` : '', formatTraceTimestamp(evt.ts)].filter(Boolean).join(' · ');
+  block.innerHTML = `
+    <div class="error-log-header">
+      <span>⚠</span>
+      <span>Registro de error</span>
+      <span class="error-log-source">${escapeHtml(meta)}</span>
+    </div>
+    <div class="error-log-content">${escapeHtml(evt.message || 'Error desconocido')}</div>
+  `;
+  return block;
+}
+
+function createNoticeLogBlock(evt) {
+  const block = document.createElement('div');
+  block.className = 'notice-log-block';
+  const waitLabel = typeof evt.wait_seconds === 'number' ? `${evt.wait_seconds.toFixed(2)}s` : '';
+  const gapLabel = typeof evt.min_interval_seconds === 'number' ? `gap ${evt.min_interval_seconds.toFixed(2)}s` : '';
+  const reasonsLabel = Array.isArray(evt.reasons) && evt.reasons.length ? evt.reasons.join(', ') : '';
+  const meta = [evt.source, evt.max_rpm ? `${evt.max_rpm} RPM` : '', waitLabel, gapLabel, reasonsLabel, formatTraceTimestamp(evt.ts)].filter(Boolean).join(' · ');
+  block.innerHTML = `
+    <div class="notice-log-header">
+      <span>⏱</span>
+      <span>Throttle / espera controlada</span>
+      <span class="notice-log-source">${escapeHtml(meta)}</span>
+    </div>
+    <div class="notice-log-content">${escapeHtml(evt.message || 'Espera aplicada por control de rate limit')}</div>
+  `;
+  return block;
+}
+
+function createNoticeLogBlock(evt) {
+  const block = document.createElement('div');
+  block.className = 'notice-log-block';
+  const waitLabel = typeof evt.wait_seconds === 'number' ? `${evt.wait_seconds.toFixed(2)}s` : '';
+  const meta = [evt.source, waitLabel, evt.max_rpm ? `${evt.max_rpm} RPM` : '', formatTraceTimestamp(evt.ts)].filter(Boolean).join(' · ');
+  block.innerHTML = `
+    <div class="notice-log-header">
+      <span>⏱</span>
+      <span>Throttle / espera controlada</span>
+      <span class="notice-log-source">${escapeHtml(meta)}</span>
+    </div>
+    <div class="notice-log-content">${escapeHtml(evt.message || 'Espera aplicada por control de rate limit')}</div>
   `;
   return block;
 }
@@ -732,7 +1500,11 @@ function renderMarkdown(text) {
 }
 
 function escapeHtml(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function scrollToBottom() {
@@ -746,25 +1518,21 @@ function setStatus(state) {
   document.getElementById('stream-status').textContent = state === 'streaming' ? '⚡ generando…' : '';
 }
 
+function openSettingsModal() {
+  document.getElementById('settings-modal').classList.add('visible');
+}
+
+function closeSettingsModal(event) {
+  if (event && event.target && event.target.id && event.target.id !== 'settings-modal') return;
+  document.getElementById('settings-modal').classList.remove('visible');
+}
+
 function clearChat() {
+  currentConversationId = null;
   messages = [];
-  totalTokens = 0;
-  document.getElementById('token-count').textContent = '0 tokens';
-  const msgs = document.getElementById('messages');
-  msgs.innerHTML = `
-    <div class="welcome" id="welcome">
-      <div class="welcome-logo">🧠</div>
-      <h2>NIM Chat</h2>
-      <p>Chat con los mejores modelos de NVIDIA NIM. Activa el <b>Modo Agente</b> para que el modelo pueda ejecutar comandos en tu terminal.</p>
-      <div class="welcome-chips">
-        <div class="chip" onclick="usePrompt('¿Qué modelos tienes disponibles y cuál recomiendas para código?')">💡 Modelos disponibles</div>
-        <div class="chip" onclick="usePrompt('Escribe un script Python que genere números de Fibonacci')">🐍 Script Python</div>
-        <div class="chip" onclick="usePrompt('Lista los archivos de mi directorio home y dime cuánto espacio usan')">🖥️ Ver archivos (agente)</div>
-        <div class="chip" onclick="usePrompt('Explícame cómo funciona el Mixture of Experts en DeepSeek V4')">📚 DeepSeek V4 MoE</div>
-        <div class="chip" onclick="usePrompt('Haz una comparativa entre DeepSeek V4, Qwen3-Coder y Kimi K2')">⚖️ Comparar modelos</div>
-      </div>
-    </div>
-  `;
+  updateAgentHint();
+  showWelcome();
+  renderConversationList();
 }
 
 init();

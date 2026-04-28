@@ -1,5 +1,5 @@
 .env
+.nimchat/
 __pycache__/
 *.pyc
 reports/*.json
-

@@ -52,6 +52,78 @@ python3 scripts/nvidia_nim.py chat \
   --max-tokens 16
 ```
 
+## UI local con chat agéntico
+
+Arranca la interfaz web:
+
+```bash
+bash web/start.sh
+```
+
+Abre:
+
+```text
+http://localhost:8000
+```
+
+En la barra lateral quedan solo el **prompt del sistema**, el **modelo** y el **historial**. Los ajustes operativos viven en el botón **Ajustes** de la barra superior.
+
+La **carpeta de trabajo** configurada en ese modal se usa como `cwd` por defecto: comandos sin `cwd` explícito se ejecutan ahí, y las rutas relativas de `read_file`, `write_file` y `list_directory` se resuelven desde esa carpeta.
+
+El chat funciona siempre en modo agéntico. Cada respuesta guarda y vuelve a mostrar:
+
+- razonamiento emitido por el modelo
+- comandos y llamadas a herramientas con su `cwd` o ruta resuelta
+- resultados de herramientas y salidas completas (`stdout` / `stderr` cuando aplique)
+- registro de errores y `stderr`
+- memoria contextual automática entre turnos
+
+Cada bloque de herramienta también muestra un botón **Ejecutar** para relanzar manualmente esa acción y ver una nueva salida dentro del mismo chat.
+
+La memoria contextual se alimenta con tres capas a la vez:
+
+- **memoria persistente por conversación**: resume objetivos, comandos, rutas, hallazgos y errores ya observados
+- **memoria operativa reciente**: arrastra un resumen corto de los últimos turnos y acciones ejecutadas
+- **salidas relevantes recientes**: reinyecta fragmentos útiles de outputs anteriores para mantener continuidad técnica
+
+La temperatura ya no se configura manualmente desde la UI: el backend la elige automáticamente según el tipo de tarea y el modelo.
+
+Además, el backend aplica un **throttle global** a las llamadas contra NVIDIA para mantenerse por debajo del límite de RPM. Por defecto usa `35 RPM`, pero también fuerza una **separación mínima entre requests** de `2.2s`, así que no dispara ráfagas cortas que suelen acabar en `429`. Si aun así NVIDIA responde `429`, entra en **backoff automático** y reintenta sin abortar la conversación.
+
+Ese throttle también es **configurable desde el modal de Ajustes** de la UI con dos inputs:
+
+- **RPM máximo**
+- **intervalo mínimo entre requests (s)**
+
+La separación efectiva aplicada será siempre la mayor entre:
+
+- `$60 / RPM$`
+- el intervalo mínimo que configures manualmente
+
+Variables opcionales para ajustar ese comportamiento:
+
+```bash
+NIM_MAX_RPM=35
+NIM_MIN_REQUEST_INTERVAL_SECONDS=2.2
+NIM_RATE_WINDOW_SECONDS=60
+NIM_RATE_SAFETY_SECONDS=0.35
+NIM_429_BACKOFF_SECONDS=15
+```
+
+Esto afecta a las llamadas del chat y también a la carga de modelos (`/v1/models`).
+
+La UI también guarda el historial en disco. Por defecto usa:
+
+```text
+.nimchat/conversations/*.json
+```
+
+Puedes cambiar esa ubicación con:
+
+```bash
+NIMCHAT_DATA_DIR=/ruta/segura bash web/start.sh
+```
+
 Prueba controlada de rate limit, pequeña por defecto:
 
 ```bash
@@ -118,4 +190,3 @@ NVIDIA documenta que los servicios OpenAI-compatible suelen limitar:
 En la documentación pública no encontré una tabla oficial única con RPM/TPM por modelo para Build. En foros recientes de NVIDIA, usuarios reportan límite por defecto de `40 RPM` y errores `429 Too Many Requests`; esto debe verificarse con tu propia cuenta usando `probe`, porque NVIDIA puede variar límites por cuenta, región, modelo o carga.
 
 El uso por Developer Program es para prototipado, desarrollo, investigación y testing. Producción requiere NVIDIA AI Enterprise.
-
