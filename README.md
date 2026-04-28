@@ -16,6 +16,8 @@ cp .env.example .env
 NVIDIA_API_KEY=nvapi-...
 ```
 
+En `.env` solo hacen falta credenciales y, si quieres, la base URL/modelo por defecto. Los ajustes operativos del chat (throttle NVIDIA y carpeta de trabajo) se cambian desde la UI.
+
 No subas `.env`: está en `.gitignore`.
 
 ## Comandos
@@ -95,20 +97,12 @@ Ese throttle también es **configurable desde el modal de Ajustes** de la UI con
 - **RPM máximo**
 - **intervalo mínimo entre requests (s)**
 
+La **carpeta de trabajo** del modal también se guarda desde la UI. Estos ajustes quedan persistidos por la aplicación en disco, sin tener que editar `.env`.
+
 La separación efectiva aplicada será siempre la mayor entre:
 
 - `$60 / RPM$`
 - el intervalo mínimo que configures manualmente
-
-Variables opcionales para ajustar ese comportamiento:
-
-```bash
-NIM_MAX_RPM=35
-NIM_MIN_REQUEST_INTERVAL_SECONDS=2.2
-NIM_RATE_WINDOW_SECONDS=60
-NIM_RATE_SAFETY_SECONDS=0.35
-NIM_429_BACKOFF_SECONDS=15
-```
 
 Esto afecta a las llamadas del chat y también a la carga de modelos (`/v1/models`).
 
@@ -116,6 +110,12 @@ La UI también guarda el historial en disco. Por defecto usa:
 
 ```text
 .nimchat/conversations/*.json
+```
+
+Y los ajustes operativos de la UI se guardan en:
+
+```text
+.nimchat/settings.json
 ```
 
 Puedes cambiar esa ubicación con:

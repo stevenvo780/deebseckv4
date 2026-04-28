@@ -461,7 +461,7 @@ Principios fundamentales:
     <div class="modal-header">
       <div>
         <div class="modal-title" id="settings-title">Ajustes</div>
-        <div class="modal-subtitle">El modo agéntico es el único modo disponible. Aquí van los ajustes operativos del chat.</div>
+        <div class="modal-subtitle">El modo agéntico es el único modo disponible. Estos ajustes se guardan desde la UI y quedan persistidos para futuras sesiones.</div>
       </div>
       <button class="btn btn-ghost btn-mini" type="button" onclick="closeSettingsModal()">✕</button>
     </div>
@@ -733,8 +733,7 @@ async function saveConversation() {
 
 function setupSidebar() {
   document.getElementById('model-select').addEventListener('change', updateModelInfo);
-  document.getElementById('working-dir').addEventListener('input', event => {
-    localStorage.setItem('nimchat_working_dir', event.target.value.trim());
+  document.getElementById('working-dir').addEventListener('input', () => {
     updateWorkdirStatus();
     updateAgentHint();
   });
@@ -743,11 +742,13 @@ function setupSidebar() {
 }
 
 async function loadWorkdir() {
+  let configuredWorkdir = '';
   try {
     const res = await fetch('/api/workdir');
     const data = await res.json();
     defaultWorkdir = data.default || '';
     homeWorkdir = data.home || '';
+    configuredWorkdir = data.working_dir || '';
     nvidiaMaxRpm = Number.isFinite(Number(data.nvidia_max_rpm)) ? Number(data.nvidia_max_rpm) : 35;
     nvidiaMinIntervalSeconds = Number.isFinite(Number(data.nvidia_min_request_interval_seconds)) ? Number(data.nvidia_min_request_interval_seconds) : 2.2;
     nvidiaEffectiveMinIntervalSeconds = Number.isFinite(Number(data.nvidia_effective_min_interval_seconds))
@@ -761,23 +762,9 @@ async function loadWorkdir() {
     nvidiaEffectiveMinIntervalSeconds = 2.2;
   }
 
-  const saved = localStorage.getItem('nimchat_working_dir');
-  document.getElementById('working-dir').value = saved || defaultWorkdir || '';
+  document.getElementById('working-dir').value = configuredWorkdir || defaultWorkdir || '';
   document.getElementById('nvidia-max-rpm-input').value = String(nvidiaMaxRpm);
   document.getElementById('nvidia-min-interval-input').value = String(nvidiaMinIntervalSeconds);
-
-  const savedRpm = localStorage.getItem('nimchat_nvidia_max_rpm');
-  const savedMinInterval = localStorage.getItem('nimchat_nvidia_min_interval');
-  if (savedRpm !== null) document.getElementById('nvidia-max-rpm-input').value = savedRpm;
-  if (savedMinInterval !== null) document.getElementById('nvidia-min-interval-input').value = savedMinInterval;
-
-  if (savedRpm !== null || savedMinInterval !== null) {
-    try {
-      await persistSettings({ silent: true });
-    } catch {
-      // Mantener los valores cargados aunque el backend no esté disponible todavía.
-    }
-  }
 
   updateWorkdirStatus();
   updateThrottleStatus();
@@ -811,11 +798,13 @@ function updateThrottleStatus() {
 async function persistSettings({ silent = false } = {}) {
   const rpm = parsePositiveInt(document.getElementById('nvidia-max-rpm-input').value, nvidiaMaxRpm || 35);
   const minInterval = parseNonNegativeFloat(document.getElementById('nvidia-min-interval-input').value, nvidiaMinIntervalSeconds || 0);
+  const workingDir = selectedWorkdir();
 
   const res = await fetch('/api/settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      working_dir: workingDir,
       nvidia_max_rpm: rpm,
       nvidia_min_request_interval_seconds: minInterval,
     }),
@@ -832,11 +821,11 @@ async function persistSettings({ silent = false } = {}) {
   nvidiaEffectiveMinIntervalSeconds = Number.isFinite(Number(settings.nvidia_effective_min_interval_seconds))
     ? Number(settings.nvidia_effective_min_interval_seconds)
     : Math.max(derivedIntervalFromRpm(nvidiaMaxRpm), nvidiaMinIntervalSeconds);
+  document.getElementById('working-dir').value = settings.working_dir || workingDir || defaultWorkdir || '';
 
   document.getElementById('nvidia-max-rpm-input').value = String(nvidiaMaxRpm);
   document.getElementById('nvidia-min-interval-input').value = String(nvidiaMinIntervalSeconds);
-  localStorage.setItem('nimchat_nvidia_max_rpm', String(nvidiaMaxRpm));
-  localStorage.setItem('nimchat_nvidia_min_interval', String(nvidiaMinIntervalSeconds));
+  updateWorkdirStatus();
   updateThrottleStatus();
   updateAgentHint();
 
@@ -862,14 +851,12 @@ function selectedWorkdir() {
 
 function setDefaultWorkdir() {
   document.getElementById('working-dir').value = defaultWorkdir;
-  localStorage.setItem('nimchat_working_dir', defaultWorkdir);
   updateWorkdirStatus();
   updateAgentHint();
 }
 
 function setHomeWorkdir() {
   document.getElementById('working-dir').value = homeWorkdir;
-  localStorage.setItem('nimchat_working_dir', homeWorkdir);
   updateWorkdirStatus();
   updateAgentHint();
 }

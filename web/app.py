@@ -34,14 +34,15 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 
 API_KEY = os.getenv("NVIDIA_API_KEY", "")
 BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
-NIM_MAX_RPM = max(1, int(os.getenv("NIM_MAX_RPM", "35")))
-NIM_MIN_REQUEST_INTERVAL_SECONDS = max(0.0, float(os.getenv("NIM_MIN_REQUEST_INTERVAL_SECONDS", "2.2")))
-NIM_RATE_WINDOW_SECONDS = max(1.0, float(os.getenv("NIM_RATE_WINDOW_SECONDS", "60")))
-NIM_RATE_SAFETY_SECONDS = max(0.0, float(os.getenv("NIM_RATE_SAFETY_SECONDS", "0.35")))
-NIM_429_BACKOFF_SECONDS = max(1.0, float(os.getenv("NIM_429_BACKOFF_SECONDS", "15")))
+NIM_MAX_RPM = 35
+NIM_MIN_REQUEST_INTERVAL_SECONDS = 2.2
+NIM_RATE_WINDOW_SECONDS = 60.0
+NIM_RATE_SAFETY_SECONDS = 0.35
+NIM_429_BACKOFF_SECONDS = 15.0
 DEFAULT_WORKING_DIR = Path(__file__).parent.parent.resolve()
 DATA_DIR = Path(os.getenv("NIMCHAT_DATA_DIR", DEFAULT_WORKING_DIR / ".nimchat")).expanduser()
 CONVERSATIONS_DIR = DATA_DIR / "conversations"
+SETTINGS_FILE = DATA_DIR / "settings.json"
 DEFAULT_AGENT_MODE = True
 
 TOOLS = [
@@ -284,8 +285,93 @@ def parse_runtime_config_value(value: Any, *, kind: str, minimum: float) -> floa
     return parsed
 
 
+def ensure_data_dir() -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
 def ensure_conversations_dir() -> None:
+    ensure_data_dir()
     CONVERSATIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def normalize_working_dir_value(value: str | None = None) -> str:
+    raw = (value or str(DEFAULT_WORKING_DIR)).strip() or str(DEFAULT_WORKING_DIR)
+    return str(Path(raw).expanduser().resolve(strict=False))
+
+
+def default_runtime_settings() -> dict[str, Any]:
+    return {
+        "working_dir": normalize_working_dir_value(str(DEFAULT_WORKING_DIR)),
+        "nvidia_max_rpm": int(NIM_MAX_RPM),
+        "nvidia_min_request_interval_seconds": float(NIM_MIN_REQUEST_INTERVAL_SECONDS),
+    }
+
+
+def sanitize_runtime_settings(raw: dict[str, Any] | None) -> dict[str, Any]:
+    settings = default_runtime_settings()
+    if not isinstance(raw, dict):
+        return settings
+
+    working_dir = raw.get("working_dir")
+    if isinstance(working_dir, str) and working_dir.strip():
+        settings["working_dir"] = normalize_working_dir_value(working_dir)
+
+    try:
+        rpm = int(float(raw.get("nvidia_max_rpm")))
+        if rpm >= 1:
+            settings["nvidia_max_rpm"] = rpm
+    except (TypeError, ValueError):
+        pass
+
+    try:
+        min_interval = float(raw.get("nvidia_min_request_interval_seconds"))
+        if min_interval >= 0:
+            settings["nvidia_min_request_interval_seconds"] = min_interval
+    except (TypeError, ValueError):
+        pass
+
+    return settings
+
+
+def read_runtime_settings() -> dict[str, Any]:
+    ensure_data_dir()
+    if not SETTINGS_FILE.exists():
+        return default_runtime_settings()
+
+    try:
+        raw = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return default_runtime_settings()
+
+    return sanitize_runtime_settings(raw)
+
+
+def write_runtime_settings(settings: dict[str, Any]) -> dict[str, Any]:
+    ensure_data_dir()
+    sanitized = sanitize_runtime_settings(settings)
+    tmp_path = SETTINGS_FILE.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(sanitized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp_path.replace(SETTINGS_FILE)
+    return sanitized
+
+
+INITIAL_RUNTIME_SETTINGS = read_runtime_settings()
+NVIDIA_RATE_LIMITER.max_requests = int(INITIAL_RUNTIME_SETTINGS["nvidia_max_rpm"])
+NVIDIA_RATE_LIMITER.min_interval_seconds = float(INITIAL_RUNTIME_SETTINGS["nvidia_min_request_interval_seconds"])
+
+
+def current_runtime_settings() -> dict[str, Any]:
+    stored = read_runtime_settings()
+    limiter = NVIDIA_RATE_LIMITER.snapshot()
+    return {
+        "working_dir": stored["working_dir"],
+        "nvidia_max_rpm": int(limiter["max_requests"]),
+        "nvidia_min_request_interval_seconds": float(limiter["min_interval_seconds"]),
+        "nvidia_effective_min_interval_seconds": float(limiter["effective_min_interval_seconds"]),
+        "nvidia_rate_window_seconds": float(limiter["window_seconds"]),
+        "nvidia_rate_safety_seconds": float(limiter["safety_seconds"]),
+        "nvidia_429_backoff_seconds": float(NIM_429_BACKOFF_SECONDS),
+    }
 
 
 def sanitize_chat_messages(messages: list[Any]) -> list[dict[str, Any]]:
@@ -478,7 +564,8 @@ def write_conversation(doc: dict) -> None:
 
 
 def resolve_working_dir(value: str | None = None) -> Path:
-    raw = (value or str(DEFAULT_WORKING_DIR)).strip() or str(DEFAULT_WORKING_DIR)
+    configured = read_runtime_settings().get("working_dir") or str(DEFAULT_WORKING_DIR)
+    raw = (value or str(configured)).strip() or str(DEFAULT_WORKING_DIR)
     return Path(raw).expanduser().resolve(strict=False)
 
 
@@ -1130,29 +1217,31 @@ async def api_models():
 
 @app.get("/api/workdir")
 async def api_workdir():
-    limiter_settings = NVIDIA_RATE_LIMITER.snapshot()
+    runtime_settings = current_runtime_settings()
     return {
         "default": str(DEFAULT_WORKING_DIR),
         "home": str(Path.home()),
+        "working_dir": runtime_settings["working_dir"],
         "default_agent_mode": DEFAULT_AGENT_MODE,
-        "nvidia_max_rpm": int(limiter_settings["max_requests"]),
-        "nvidia_rate_window_seconds": limiter_settings["window_seconds"],
-        "nvidia_min_request_interval_seconds": limiter_settings["min_interval_seconds"],
-        "nvidia_effective_min_interval_seconds": limiter_settings["effective_min_interval_seconds"],
-        "nvidia_rate_safety_seconds": limiter_settings["safety_seconds"],
-        "nvidia_429_backoff_seconds": NIM_429_BACKOFF_SECONDS,
+        "nvidia_max_rpm": runtime_settings["nvidia_max_rpm"],
+        "nvidia_rate_window_seconds": runtime_settings["nvidia_rate_window_seconds"],
+        "nvidia_min_request_interval_seconds": runtime_settings["nvidia_min_request_interval_seconds"],
+        "nvidia_effective_min_interval_seconds": runtime_settings["nvidia_effective_min_interval_seconds"],
+        "nvidia_rate_safety_seconds": runtime_settings["nvidia_rate_safety_seconds"],
+        "nvidia_429_backoff_seconds": runtime_settings["nvidia_429_backoff_seconds"],
     }
 
 
 @app.post("/api/settings")
 async def api_settings(request: Request):
     body = await request.json()
+    runtime_settings = read_runtime_settings()
 
-    max_rpm = None
+    max_rpm = runtime_settings["nvidia_max_rpm"]
     if "nvidia_max_rpm" in body:
         max_rpm = int(parse_runtime_config_value(body.get("nvidia_max_rpm"), kind="nvidia_max_rpm", minimum=1.0))
 
-    min_interval = None
+    min_interval = runtime_settings["nvidia_min_request_interval_seconds"]
     if "nvidia_min_request_interval_seconds" in body:
         min_interval = parse_runtime_config_value(
             body.get("nvidia_min_request_interval_seconds"),
@@ -1160,19 +1249,19 @@ async def api_settings(request: Request):
             minimum=0.0,
         )
 
-    limiter_settings = await NVIDIA_RATE_LIMITER.update_settings(
-        max_requests=max_rpm,
-        min_interval_seconds=min_interval,
+    if "working_dir" in body:
+        runtime_settings["working_dir"] = normalize_working_dir_value(str(body.get("working_dir") or ""))
+
+    runtime_settings["nvidia_max_rpm"] = max_rpm
+    runtime_settings["nvidia_min_request_interval_seconds"] = min_interval
+    saved_settings = write_runtime_settings(runtime_settings)
+
+    await NVIDIA_RATE_LIMITER.update_settings(
+        max_requests=int(saved_settings["nvidia_max_rpm"]),
+        min_interval_seconds=float(saved_settings["nvidia_min_request_interval_seconds"]),
     )
     return {
-        "settings": {
-            "nvidia_max_rpm": int(limiter_settings["max_requests"]),
-            "nvidia_rate_window_seconds": limiter_settings["window_seconds"],
-            "nvidia_min_request_interval_seconds": limiter_settings["min_interval_seconds"],
-            "nvidia_effective_min_interval_seconds": limiter_settings["effective_min_interval_seconds"],
-            "nvidia_rate_safety_seconds": limiter_settings["safety_seconds"],
-            "nvidia_429_backoff_seconds": NIM_429_BACKOFF_SECONDS,
-        }
+        "settings": current_runtime_settings()
     }
 
 
